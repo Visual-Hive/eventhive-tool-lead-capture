@@ -1,0 +1,208 @@
+{
+    "slug": "lead-capture",
+    "name": "Lead Capture",
+    "version": "1.0.0",
+    "description": "Mobile-first lead capture and qualification tool for exhibitors and sponsors. Quick-add leads on the show floor, score them with BANT qualification criteria, generate follow-up tasks, match against attendee registrations, and export CRM-ready CSVs. Stop paying £15/day for badge scanners — this is free and better.",
+    "category": "operations",
+    "difficulty": "beginner",
+    "requires_backend": false,
+    "is_published": true,
+    "author": "Visual Hive",
+    "source_repo": "https://github.com/Visual-Hive/eventhive-tool-lead-capture",
+    "tool_file": "tool.html",
+    "config_schema": {
+        "sections": [
+            {
+                "id": "branding",
+                "title": "Branding",
+                "description": "Customise to match your event or company brand.",
+                "fields": [
+                    {
+                        "id": "companyName",
+                        "type": "text",
+                        "label": "Company / Exhibitor Name",
+                        "placeholder": "e.g. Acme Tech Ltd",
+                        "required": true,
+                        "default": "My Company"
+                    },
+                    {
+                        "id": "primaryColor",
+                        "type": "color",
+                        "label": "Primary Brand Colour",
+                        "default": "#7C3AED"
+                    }
+                ]
+            },
+            {
+                "id": "event",
+                "title": "Event Details",
+                "description": "Set your event details for data linking with other tools.",
+                "fields": [
+                    {
+                        "id": "eventName",
+                        "type": "text",
+                        "label": "Event Name",
+                        "placeholder": "e.g. TechSummit 2026",
+                        "required": true,
+                        "default": "My Event"
+                    },
+                    {
+                        "id": "eventDate",
+                        "type": "text",
+                        "label": "Event Date(s)",
+                        "placeholder": "e.g. 15–16 September 2026",
+                        "default": ""
+                    },
+                    {
+                        "id": "eventSlug",
+                        "type": "text",
+                        "label": "Event Slug (for ecosystem links)",
+                        "placeholder": "e.g. techsummit-2026",
+                        "description": "Must match the slug used in Registration Manager and Exhibitor Manager for attendee lookup.",
+                        "default": "my-event"
+                    },
+                    {
+                        "id": "standNumber",
+                        "type": "text",
+                        "label": "Stand / Booth Number",
+                        "placeholder": "e.g. A42",
+                        "description": "Your stand number at the event.",
+                        "default": ""
+                    }
+                ]
+            },
+            {
+                "id": "qualification",
+                "title": "Qualification Settings",
+                "description": "Configure BANT scoring weights and hot/warm/cold thresholds.",
+                "fields": [
+                    {
+                        "id": "hotThreshold",
+                        "type": "number",
+                        "label": "Hot Lead Threshold (score %)",
+                        "description": "Leads scoring at or above this are 'Hot'.",
+                        "default": 70,
+                        "min": 1,
+                        "max": 100
+                    },
+                    {
+                        "id": "warmThreshold",
+                        "type": "number",
+                        "label": "Warm Lead Threshold (score %)",
+                        "description": "Leads scoring at or above this (but below Hot) are 'Warm'. Below this is 'Cold'.",
+                        "default": 40,
+                        "min": 1,
+                        "max": 100
+                    },
+                    {
+                        "id": "defaultFollowUpDays",
+                        "type": "number",
+                        "label": "Default Follow-up Days",
+                        "description": "Number of days after capture to set default follow-up due date.",
+                        "default": 1,
+                        "min": 1,
+                        "max": 30
+                    }
+                ]
+            },
+            {
+                "id": "interests",
+                "title": "Interest Areas",
+                "description": "Define the product / service interest tags for your company.",
+                "fields": [
+                    {
+                        "id": "interestAreas",
+                        "type": "json",
+                        "label": "Interest Areas",
+                        "description": "Tags shown during lead capture for interest selection.",
+                        "default": [
+                            "Product Demo",
+                            "Pricing",
+                            "Enterprise Plan",
+                            "Partnership",
+                            "Technical Specs",
+                            "Case Studies"
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "financial",
+                "title": "Financial",
+                "description": "Configure currency for pipeline value estimates.",
+                "fields": [
+                    {
+                        "id": "currency",
+                        "type": "text",
+                        "label": "Currency Code (ISO 4217)",
+                        "placeholder": "GBP",
+                        "default": "GBP"
+                    },
+                    {
+                        "id": "currencySymbol",
+                        "type": "text",
+                        "label": "Currency Symbol",
+                        "placeholder": "£",
+                        "default": "£"
+                    },
+                    {
+                        "id": "currencyLocale",
+                        "type": "text",
+                        "label": "Currency Locale",
+                        "placeholder": "en-GB",
+                        "default": "en-GB"
+                    },
+                    {
+                        "id": "hotLeadValue",
+                        "type": "number",
+                        "label": "Estimated Hot Lead Value",
+                        "description": "Average deal value for a hot lead — used in pipeline value calculation.",
+                        "default": 15000,
+                        "min": 0
+                    },
+                    {
+                        "id": "warmLeadValue",
+                        "type": "number",
+                        "label": "Estimated Warm Lead Value",
+                        "description": "Average deal value for a warm lead.",
+                        "default": 5000,
+                        "min": 0
+                    },
+                    {
+                        "id": "coldLeadValue",
+                        "type": "number",
+                        "label": "Estimated Cold Lead Value",
+                        "description": "Average deal value for a cold lead.",
+                        "default": 1000,
+                        "min": 0
+                    }
+                ]
+            }
+        ]
+    },
+    "default_config": {
+        "companyName": "My Company",
+        "primaryColor": "#7C3AED",
+        "eventName": "My Event",
+        "eventDate": "",
+        "eventSlug": "my-event",
+        "standNumber": "",
+        "hotThreshold": 70,
+        "warmThreshold": 40,
+        "defaultFollowUpDays": 1,
+        "interestAreas": [
+            "Product Demo",
+            "Pricing",
+            "Enterprise Plan",
+            "Partnership",
+            "Technical Specs",
+            "Case Studies"
+        ],
+        "currency": "GBP",
+        "currencySymbol": "£",
+        "currencyLocale": "en-GB",
+        "hotLeadValue": 15000,
+        "warmLeadValue": 5000,
+        "coldLeadValue": 1000
+    }
+}

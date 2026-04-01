@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Lead Capture — {{config.eventName}}</title>
+<style>
+  :root {
+    --primary: {{config.primaryColor}};
+    --primary-dark: color-mix(in srgb, {{config.primaryColor}} 80%, black);
+    --primary-light: color-mix(in srgb, {{config.primaryColor}} 15%, white);
+    --hot: #EF4444;
+    --hot-light: #FEF2F2;
+    --warm: #F59E0B;
+    --warm-light: #FFFBEB;
+    --cold: #3B82F6;
+    --cold-light: #EFF6FF;
+    --unqualified: #9CA3AF;
+    --unq-light: #F9FAFB;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    --success: #10B981;
+    --danger: #EF4444;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+
+  /* Header */
+  .app-header { background: var(--primary); color: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .app-header h1 { font-size: 16px; font-weight: 700; }
+  .app-header .subtitle { font-size: 11px; opacity: 0.8; margin-top: 1px; }
+  .header-meta { text-align: right; font-size: 12px; opacity: 0.85; }
+
+  /* Tab Nav */
+  .tab-nav { background: var(--surface); border-bottom: 2px solid var(--border); display: flex; position: sticky; top: 52px; z-index: 90; }
+  .tab-btn { flex: 1; padding: 11px 4px; font-size: 12px; font-weight: 600; color: var(--text-muted); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-btn .tab-icon { font-size: 16px; }
+  .tab-badge { background: var(--primary); color: #fff; border-radius: 999px; font-size: 10px; padding: 0 5px; min-width: 16px; text-align: center; display: inline-block; }
+  .tab-badge.hot { background: var(--hot); }
+
+  /* Content */
+  .tab-content { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
+  .card-header { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 700; }
+  .card-body { padding: 16px; }
+
+  /* Stat Grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; text-align: center; }
+  .stat-card.hot { background: var(--hot-light); border-color: #FECACA; }
+  .stat-card.warm { background: var(--warm-light); border-color: #FDE68A; }
+  .stat-card.cold { background: var(--cold-light); border-color: #BFDBFE; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--primary); line-height: 1; }
+  .stat-card.hot .stat-value { color: var(--hot); }
+  .stat-card.warm .stat-value { color: #D97706; }
+  .stat-card.cold .stat-value { color: var(--cold); }
+  .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Forms */
+  .form-group { margin-bottom: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  input[type=text], input[type=email], input[type=number], input[type=date], select, textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 14px; color: var(--text); background: var(--surface); transition: border-color 0.15s;
+    -webkit-appearance: none; appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+  textarea { min-height: 80px; resize: vertical; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  .form-hint { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+  /* Rating Buttons */
+  .rating-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .rating-btn { padding: 10px 6px; border-radius: 8px; border: 2px solid var(--border); background: var(--surface); cursor: pointer; text-align: center; font-size: 11px; font-weight: 700; transition: all 0.15s; }
+  .rating-btn .emoji { font-size: 20px; display: block; margin-bottom: 4px; }
+  .rating-btn:hover { transform: translateY(-1px); }
+  .rating-btn.selected-hot, .rating-btn[data-rating=hot]:hover { background: var(--hot-light); border-color: var(--hot); color: var(--hot); }
+  .rating-btn.selected-warm, .rating-btn[data-rating=warm]:hover { background: var(--warm-light); border-color: var(--warm); color: #B45309; }
+  .rating-btn.selected-cold, .rating-btn[data-rating=cold]:hover { background: var(--cold-light); border-color: var(--cold); color: var(--cold); }
+  .rating-btn.selected-unqualified, .rating-btn[data-rating=unqualified]:hover { background: var(--unq-light); border-color: var(--unq-light); color: var(--unqualified); }
+
+  /* Interest Tags */
+  .tag-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag-btn { padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text-muted); transition: all 0.15s; }
+  .tag-btn.selected { background: var(--primary-light); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+
+  /* BANT Scoring */
+  .bant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .bant-item { border: 1.5px solid var(--border); border-radius: 8px; padding: 12px; }
+  .bant-item label { font-size: 12px; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 600; margin-bottom: 8px; }
+  .bant-toggle { display: flex; gap: 6px; }
+  .bant-opt { flex: 1; padding: 6px 4px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--surface); font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; color: var(--text-muted); transition: all 0.15s; }
+  .bant-opt.yes { background: #DCFCE7; border-color: #86EFAC; color: #16A34A; }
+  .bant-opt.partial { background: #FEF9C3; border-color: #FDE047; color: #854D0E; }
+  .bant-opt.no { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
+
+  /* Score Bar */
+  .score-bar-wrap { margin-top: 12px; background: var(--border); border-radius: 999px; height: 8px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 999px; transition: width 0.3s; }
+  .score-bar-fill.hot { background: var(--hot); }
+  .score-bar-fill.warm { background: var(--warm); }
+  .score-bar-fill.cold { background: var(--cold); }
+  .score-label { font-size: 12px; font-weight: 700; margin-top: 6px; display: flex; justify-content: space-between; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg); }
+  .btn-danger { background: #FEF2F2; color: var(--danger); border: 1.5px solid #FECACA; }
+  .btn-success { background: #DCFCE7; color: #15803D; border: 1.5px solid #86EFAC; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-full { width: 100%; justify-content: center; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Lead List */
+  .lead-list { display: flex; flex-direction: column; gap: 8px; }
+  .lead-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; transition: all 0.15s; }
+  .lead-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .lead-card.selected { border-color: var(--primary); background: var(--primary-light); }
+  .lead-rating-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .lead-rating-badge.hot { background: var(--hot-light); }
+  .lead-rating-badge.warm { background: var(--warm-light); }
+  .lead-rating-badge.cold { background: var(--cold-light); }
+  .lead-rating-badge.unqualified { background: var(--unq-light); }
+  .lead-info { flex: 1; min-width: 0; }
+  .lead-name { font-weight: 700; font-size: 14px; }
+  .lead-company { font-size: 12px; color: var(--text-muted); }
+  .lead-tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .tag-chip { font-size: 10px; padding: 2px 7px; border-radius: 999px; background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .tag-chip.follow-up { background: #FEF9C3; color: #854D0E; }
+  .tag-chip.overdue { background: #FEF2F2; color: var(--danger); }
+  .lead-meta { text-align: right; font-size: 11px; color: var(--text-light); flex-shrink: 0; }
+  .lead-score { font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+  .lead-score.hot { color: var(--hot); }
+  .lead-score.warm { color: #D97706; }
+  .lead-score.cold { color: var(--cold); }
+  .lead-score.unqualified { color: var(--unqualified); }
+
+  /* Filters */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+  .filter-bar input[type=text] { flex: 1; min-width: 140px; padding: 8px 12px; font-size: 13px; }
+  .filter-select { padding: 8px 28px 8px 10px; font-size: 12px; min-width: 110px; }
+
+  /* Follow-up */
+  .followup-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; margin-bottom: 8px; }
+  .followup-card.overdue { border-left: 4px solid var(--danger); }
+  .followup-card.done { opacity: 0.6; }
+  .followup-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .followup-title { font-weight: 700; font-size: 13px; }
+  .followup-lead { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .followup-due { font-size: 11px; font-weight: 600; }
+  .followup-due.overdue { color: var(--danger); }
+  .followup-due.today { color: #D97706; }
+  .followup-due.upcoming { color: var(--success); }
+
+  /* Analytics Charts */
+  .chart-wrap { position: relative; width: 100%; }
+  canvas { display: block; max-width: 100%; }
+  .pipeline-value { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 12px; }
+  .pipeline-value .amount { font-size: 32px; font-weight: 900; }
+  .pipeline-value .label { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+
+  /* Match Banner */
+  .match-banner { background: #DCFCE7; border: 1.5px solid #86EFAC; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; color: #15803D; display: flex; align-items: center; gap: 8px; }
+  .match-banner .match-icon { font-size: 18px; }
+  .no-match-banner { background: var(--unq-light); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--text-muted); }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; padding: 16px; }
+  .modal-overlay.open { display: flex; }
+  @media (min-width: 500px) { .modal-overlay { align-items: center; } }
+  .modal { background: var(--surface); border-radius: 16px 16px 0 0; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; padding: 20px 16px; }
+  @media (min-width: 500px) { .modal { border-radius: var(--radius); } }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .modal-title { font-size: 16px; font-weight: 800; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 4px; }
+
+  /* Empty State */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+  .empty-state p { font-size: 13px; max-width: 280px; margin: 0 auto 16px; line-height: 1.5; }
+
+  /* Quick Stats Row */
+  .quick-stats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; }
+  .quick-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; flex-shrink: 0; text-align: center; min-width: 80px; }
+  .quick-stat .val { font-size: 22px; font-weight: 800; color: var(--primary); }
+  .quick-stat .lbl { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+  /* Bulk Select */
+  .bulk-bar { background: var(--primary); color: #fff; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
+  .bulk-bar.visible { display: flex; }
+  .bulk-bar .bulk-count { font-size: 13px; font-weight: 700; }
+  .bulk-actions { display: flex; gap: 6px; }
+  .bulk-action-btn { background: rgba(255,255,255,0.2); color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 600; cursor: pointer; }
+
+  /* Export */
+  .export-option { display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; background: var(--surface); }
+  .export-info { flex: 1; }
+  .export-title { font-weight: 700; font-size: 13px; }
+  .export-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #1E293B; color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; z-index: 300; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  /* Checkbox */
+  input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+
+  /* Responsive */
+  @media (max-width: 400px) {
+    .form-row { grid-template-columns: 1fr; }
+    .bant-grid { grid-template-columns: 1fr; }
+    .rating-grid { grid-template-columns: repeat(2, 1fr); }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 640px) {
+    .stat-grid { grid-template-columns: repeat(4, 1fr); }
+    .tab-btn { flex-direction: row; gap: 6px; font-size: 13px; }
+    .tab-btn .tab-icon { font-size: 14px; }
+  }
+
+  /* My Card Tab */
+  .mycard-panels { display: flex; flex-direction: column; gap: 12px; }
+  .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+  .qr-fullscreen-overlay { position: fixed; inset: 0; background: #fff; z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  .qr-fullscreen-overlay.open { display: flex; }
+  .qr-canvas-wrap { background: #fff; padding: 16px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+  .qr-canvas-wrap canvas { display: block; image-rendering: pixelated; }
+  .qr-name-label { font-size: 18px; font-weight: 800; margin-top: 16px; text-align: center; }
+  .qr-company-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; text-align: center; }
+  .qr-hint { font-size: 11px; color: var(--text-light); margin-top: 12px; text-align: center; max-width: 200px; line-height: 1.4; }
+  .scanner-wrap { position: relative; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 1; max-height: 260px; }
+  .scanner-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .scanner-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .scanner-frame { width: 60%; aspect-ratio: 1; border: 3px solid #fff; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); }
+  .scanner-line { position: absolute; width: 50%; height: 2px; background: var(--primary); animation: scan-anim 2s infinite ease-in-out; }
+  @keyframes scan-anim { 0%,100% { top: 22%; } 50% { top: 72%; } }
+  .scanner-status { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; color: #fff; font-size: 12px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+  .scan-result-banner { background: #DCFCE7; border: 1.5px solid #86EFAC; border-radius: 8px; padding: 12px 16px; display: none; }
+  .scan-result-banner.visible { display: block; }
+  .no-camera-msg { padding: 32px 16px; text-align: center; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+
+  /* Print */
+  @media print {
+    .tab-nav, .app-header, .btn, .bulk-bar, .filter-bar, .modal-overlay { display: none !important; }
+    .tab-content { display: block !important; }
+    .lead-card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <h1>🎯 Lead Capture</h1>
+    <div class="subtitle" id="header-event-name">{{config.eventName}}</div>
+  </div>
+  <div class="header-meta">
+    <div id="header-total-leads">0 leads</div>
+    <div id="header-stand"></div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('capture')" id="tab-capture">
+    <span class="tab-icon">📥</span>
+    <span>Capture</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('leads')" id="tab-leads">
+    <span class="tab-icon">👥</span>
+    <span>Leads <span class="tab-badge" id="badge-leads">0</span></span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('followup')" id="tab-followup">
+    <span class="tab-icon">✅</span>
+    <span>Follow-up <span class="tab-badge hot" id="badge-followup">0</span></span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('analytics')" id="tab-analytics">
+    <span class="tab-icon">📊</span>
+    <span>Analytics</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('mycard')" id="tab-mycard">
+    <span class="tab-icon">🪪</span>
+    <span>My Card</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: CAPTURE
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-content-capture" class="tab-content active">
+
+  <!-- Quick Stats -->
+  <div class="quick-stats" id="capture-quick-stats">
+    <div class="quick-stat"><div class="val" id="qs-total">0</div><div class="lbl">Total</div></div>
+    <div class="quick-stat" style="border-color:#FECACA;background:#FEF2F2"><div class="val" style="color:var(--hot)" id="qs-hot">0</div><div class="lbl" style="color:#B91C1C">Hot 🔥</div></div>
+    <div class="quick-stat" style="border-color:#FDE68A;background:#FFFBEB"><div class="val" style="color:#D97706" id="qs-warm">0</div><div class="lbl" style="color:#92400E">Warm ☀️</div></div>
+    <div class="quick-stat" style="border-color:#BFDBFE;background:#EFF6FF"><div class="val" style="color:var(--cold)" id="qs-cold">0</div><div class="lbl" style="color:#1D4ED8">Cold ❄️</div></div>
+    <div class="quick-stat"><div class="val" id="qs-rate">0/hr</div><div class="lbl">Rate</div></div>
+  </div>
+
+  <!-- Attendee Lookup -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🔍 Attendee Lookup</span>
+      <span style="font-size:11px;color:var(--text-muted)">from Registration Manager</span>
+    </div>
+    <div class="card-body">
+      <div class="form-group" style="margin-bottom:8px">
+        <input type="text" id="lookup-input" placeholder="Search by name, email or company…" oninput="debounceSearch()" autocomplete="off">
+      </div>
+      <div id="lookup-results"></div>
+    </div>
+  </div>
+
+  <!-- Capture Form -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">➕ New Lead</span>
+      <button class="btn btn-sm btn-secondary" onclick="clearCaptureForm()">Clear</button>
+    </div>
+    <div class="card-body">
+      <div id="match-banner-area"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="f-first" placeholder="Emma" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" id="f-last" placeholder="Wilson" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="f-email" placeholder="emma@techcorp.com" oninput="triggerEmailLookup()" autocomplete="off">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Company</label>
+          <input type="text" id="f-company" placeholder="TechCorp Ltd" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Job Title</label>
+          <input type="text" id="f-title" placeholder="Head of Product" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Rating -->
+      <div class="form-group">
+        <label>Quick Rating</label>
+        <div class="rating-grid" id="rating-grid">
+          <button class="rating-btn" data-rating="hot" onclick="selectRating('hot')"><span class="emoji">🔥</span>Hot</button>
+          <button class="rating-btn" data-rating="warm" onclick="selectRating('warm')"><span class="emoji">☀️</span>Warm</button>
+          <button class="rating-btn" data-rating="cold" onclick="selectRating('cold')"><span class="emoji">❄️</span>Cold</button>
+          <button class="rating-btn" data-rating="unqualified" onclick="selectRating('unqualified')"><span class="emoji">—</span>Not Qual.</button>
+        </div>
+      </div>
+
+      <!-- BANT Qualification -->
+      <div class="form-group">
+        <label>BANT Qualification <span id="bant-score-display" style="color:var(--primary);font-size:14px;font-weight:800"></span></label>
+        <div class="bant-grid" id="bant-grid">
+          <div class="bant-item">
+            <label>💰 Budget</label>
+            <div class="bant-toggle" data-bant="budget">
+              <button class="bant-opt" data-val="yes" onclick="setBant(this,'budget','yes')">Yes</button>
+              <button class="bant-opt" data-val="partial" onclick="setBant(this,'budget','partial')">Partial</button>
+              <button class="bant-opt" data-val="no" onclick="setBant(this,'budget','no')">No</button>
+            </div>
+          </div>
+          <div class="bant-item">
+            <label>👔 Authority</label>
+            <div class="bant-toggle" data-bant="authority">
+              <button class="bant-opt" data-val="yes" onclick="setBant(this,'authority','yes')">Yes</button>
+              <button class="bant-opt" data-val="partial" onclick="setBant(this,'authority','partial')">Partial</button>
+              <button class="bant-opt" data-val="no" onclick="setBant(this,'authority','no')">No</button>
+            </div>
+          </div>
+          <div class="bant-item">
+            <label>🎯 Need</label>
+            <div class="bant-toggle" data-bant="need">
+              <button class="bant-opt" data-val="yes" onclick="setBant(this,'need','yes')">Yes</button>
+              <button class="bant-opt" data-val="partial" onclick="setBant(this,'need','partial')">Partial</button>
+              <button class="bant-opt" data-val="no" onclick="setBant(this,'need','no')">No</button>
+            </div>
+          </div>
+          <div class="bant-item">
+            <label>📅 Timeline</label>
+            <div class="bant-toggle" data-bant="timeline">
+              <button class="bant-opt" data-val="yes" onclick="setBant(this,'timeline','yes')">Yes</button>
+              <button class="bant-opt" data-val="partial" onclick="setBant(this,'timeline','partial')">Partial</button>
+              <button class="bant-opt" data-val="no" onclick="setBant(this,'timeline','no')">No</button>
+            </div>
+          </div>
+        </div>
+        <div class="score-bar-wrap" id="score-bar-wrap">
+          <div class="score-bar-fill" id="score-bar-fill" style="width:0%"></div>
+        </div>
+        <div class="score-label" id="score-label"><span>BANT Score</span><span id="score-pct">—</span></div>
+      </div>
+
+      <!-- Interest Tags -->
+      <div class="form-group">
+        <label>Interest Areas</label>
+        <div class="tag-grid" id="interest-tags"></div>
+      </div>
+
+      <!-- Budget / Timeline -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Est. Budget</label>
+          <select id="f-budget">
+            <option value="">Unknown</option>
+            <option>Under £10K</option>
+            <option>£10K–50K</option>
+            <option>£50K–100K</option>
+            <option>£100K+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Timeline</label>
+          <select id="f-timeline">
+            <option value="">Unknown</option>
+            <option>Immediate</option>
+            <option>Q1 2027</option>
+            <option>Q2 2027</option>
+            <option>H2 2027</option>
+            <option>2028+</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Key conversation points, what they're looking for, next steps…"></textarea>
+      </div>
+
+      <input type="hidden" id="f-edit-id">
+      <input type="hidden" id="f-attendee-id">
+      <input type="hidden" id="f-ticket-type">
+
+      <div class="btn-group">
+        <button class="btn btn-primary btn-full" onclick="saveLead()" id="save-lead-btn">💾 Save Lead</button>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn btn-secondary btn-full btn-sm" onclick="saveAndNew()">Save &amp; Capture Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: LEADS
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-content-leads" class="tab-content">
+
+  <div class="filter-bar">
+    <input type="text" id="search-input" placeholder="🔍 Search name, email, company…" oninput="renderLeadList()" style="flex:2;min-width:160px">
+    <select class="filter-select" id="filter-rating" onchange="renderLeadList()">
+      <option value="">All Ratings</option>
+      <option value="hot">🔥 Hot</option>
+      <option value="warm">☀️ Warm</option>
+      <option value="cold">❄️ Cold</option>
+      <option value="unqualified">— Not Qualified</option>
+    </select>
+    <select class="filter-select" id="filter-followup" onchange="renderLeadList()">
+      <option value="">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="contacted">Contacted</option>
+      <option value="meeting_booked">Meeting Booked</option>
+      <option value="proposal_sent">Proposal Sent</option>
+      <option value="won">Won</option>
+      <option value="lost">Lost</option>
+    </select>
+    <select class="filter-select" id="sort-by" onchange="renderLeadList()">
+      <option value="time_desc">Newest First</option>
+      <option value="time_asc">Oldest First</option>
+      <option value="score_desc">Highest Score</option>
+      <option value="name_asc">Name A–Z</option>
+      <option value="company_asc">Company A–Z</option>
+    </select>
+  </div>
+
+  <div class="bulk-bar" id="bulk-bar">
+    <span class="bulk-count" id="bulk-count-label">0 selected</span>
+    <div class="bulk-actions">
+      <button class="bulk-action-btn" onclick="bulkSetRating('hot')">🔥 Hot</button>
+      <button class="bulk-action-btn" onclick="bulkSetRating('warm')">☀️ Warm</button>
+      <button class="bulk-action-btn" onclick="bulkSetFollowUp()">✅ Follow Up</button>
+      <button class="bulk-action-btn" onclick="bulkExport()">📤 Export</button>
+      <button class="bulk-action-btn" onclick="clearBulk()">✕ Clear</button>
+    </div>
+  </div>
+
+  <div id="lead-list-container"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: FOLLOW-UP
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-content-followup" class="tab-content">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div>
+      <div style="font-weight:700;font-size:15px">Follow-up Tasks</div>
+      <div style="font-size:12px;color:var(--text-muted)" id="followup-summary"></div>
+    </div>
+    <button class="btn btn-sm btn-primary" onclick="generateFollowUps()">⚡ Generate from Leads</button>
+  </div>
+
+  <div class="filter-bar" style="margin-bottom:8px">
+    <select class="filter-select" id="fu-filter-status" onchange="renderFollowUps()">
+      <option value="">All Tasks</option>
+      <option value="pending">Pending</option>
+      <option value="done">Done</option>
+      <option value="overdue">Overdue</option>
+    </select>
+    <select class="filter-select" id="fu-filter-priority" onchange="renderFollowUps()">
+      <option value="">All Priorities</option>
+      <option value="hot">🔥 Hot Leads</option>
+      <option value="warm">☀️ Warm Leads</option>
+      <option value="cold">❄️ Cold Leads</option>
+    </select>
+    <select class="filter-select" id="fu-sort" onchange="renderFollowUps()">
+      <option value="due_asc">Due Soonest</option>
+      <option value="priority_desc">Priority First</option>
+    </select>
+  </div>
+
+  <div id="followup-list-container"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: ANALYTICS
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-content-analytics" class="tab-content">
+
+  <div class="pipeline-value">
+    <div class="label">Estimated Pipeline Value</div>
+    <div class="amount" id="pipeline-value">£0</div>
+    <div class="label" id="pipeline-breakdown"></div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-value" id="an-total">0</div><div class="stat-label">Total Leads</div></div>
+    <div class="stat-card"><div class="stat-value" id="an-rate">0/hr</div><div class="stat-label">Capture Rate</div></div>
+    <div class="stat-card"><div class="stat-value" id="an-followup-rate">0%</div><div class="stat-label">Follow-up Done</div></div>
+    <div class="stat-card"><div class="stat-value" id="an-avg-score">0</div><div class="stat-label">Avg BANT Score</div></div>
+  </div>
+
+  <!-- Rating Breakdown -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">📊 Qualification Breakdown</span></div>
+    <div class="card-body">
+      <div id="rating-bars"></div>
+    </div>
+  </div>
+
+  <!-- Top Interests -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">🏷️ Top Interest Areas</span></div>
+    <div class="card-body" id="top-interests"></div>
+  </div>
+
+  <!-- Capture Timeline -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">📅 Leads by Hour</span></div>
+    <div class="card-body">
+      <div class="chart-wrap" style="height:120px"><canvas id="timeline-chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Follow-up Status -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">✅ Follow-up Status</span></div>
+    <div class="card-body" id="followup-status-bars"></div>
+  </div>
+
+  <!-- Export Section -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">📤 Export</span></div>
+    <div class="card-body">
+      <div class="export-option">
+        <div class="export-info">
+          <div class="export-title">CRM-Ready Lead CSV</div>
+          <div class="export-desc">All lead fields — compatible with Salesforce, HubSpot, Pipedrive</div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="exportLeadsCSV()">Export</button>
+      </div>
+      <div class="export-option">
+        <div class="export-info">
+          <div class="export-title">Follow-up Task List CSV</div>
+          <div class="export-desc">All tasks with due dates, priorities and lead context</div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="exportFollowUpCSV()">Export</button>
+      </div>
+      <div class="export-option">
+        <div class="export-info">
+          <div class="export-title">Hot Leads Only CSV</div>
+          <div class="export-desc">Just your hot leads — for immediate sales team handoff</div>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="exportHotLeadsCSV()">Export</button>
+      </div>
+      <div class="export-option">
+        <div class="export-info">
+          <div class="export-title">Print Analytics Summary</div>
+          <div class="export-desc">Event ROI report for your post-event review</div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="printSummary()">Print</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: MY CARD
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-content-mycard" class="tab-content">
+
+  <!-- Profile Setup -->
+  <div class="card" id="profile-card">
+    <div class="card-header">
+      <span class="card-title">🪪 My Contact Card</span>
+      <button class="btn btn-sm btn-secondary" id="profile-edit-btn" onclick="toggleProfileEdit()">Edit</button>
+    </div>
+    <div class="card-body">
+      <!-- Display mode -->
+      <div id="profile-display">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          <div class="profile-avatar" id="profile-avatar-disp">👤</div>
+          <div>
+            <div style="font-size:18px;font-weight:800" id="profile-disp-name">Set up your profile →</div>
+            <div style="font-size:13px;color:var(--text-muted)" id="profile-disp-title"></div>
+            <div style="font-size:12px;color:var(--text-light)" id="profile-disp-email"></div>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-full" onclick="showMyQR()" id="show-qr-btn">📱 Show My QR Code</button>
+          <button class="btn btn-secondary" onclick="startScanner()" id="scan-btn">📷 Scan a Card</button>
+        </div>
+      </div>
+      <!-- Edit mode -->
+      <div id="profile-edit" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label>First Name</label><input type="text" id="p-first" placeholder="Emma"></div>
+          <div class="form-group"><label>Last Name</label><input type="text" id="p-last" placeholder="Wilson"></div>
+        </div>
+        <div class="form-group"><label>Email</label><input type="email" id="p-email" placeholder="emma@company.com"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Company</label><input type="text" id="p-company" placeholder="TechCorp Ltd"></div>
+          <div class="form-group"><label>Job Title</label><input type="text" id="p-title" placeholder="Head of Product"></div>
+        </div>
+        <div class="form-group"><label>Phone (optional)</label><input type="text" id="p-phone" placeholder="+44 7700 900123"></div>
+        <button class="btn btn-primary btn-full" onclick="saveProfile()">💾 Save My Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Scanner -->
+  <div class="card" id="scanner-card" style="display:none">
+    <div class="card-header">
+      <span class="card-title">📷 Scan a Contact Card</span>
+      <button class="btn btn-sm btn-secondary" onclick="stopScanner()">Stop</button>
+    </div>
+    <div class="card-body">
+      <div class="scanner-wrap">
+        <video id="scanner-video" class="scanner-video" playsinline muted autoplay></video>
+        <div class="scanner-overlay">
+          <div class="scanner-frame"></div>
+          <div class="scanner-line"></div>
+        </div>
+        <div class="scanner-status" id="scanner-status">Point camera at a contact QR code</div>
+      </div>
+      <div class="scan-result-banner" id="scan-result-banner" style="margin-top:12px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px">✅ Contact scanned!</div>
+        <div id="scan-result-text" style="font-size:12px;color:var(--text-muted)"></div>
+        <div class="btn-group" style="margin-top:10px">
+          <button class="btn btn-primary" onclick="applyScanToLead()">➕ Capture as Lead</button>
+          <button class="btn btn-secondary btn-sm" onclick="stopScanner()">Close Scanner</button>
+        </div>
+      </div>
+      <div class="no-camera-msg" id="no-camera-msg" style="display:none">
+        📵 Camera not available or permission denied.<br>
+        <strong>No problem!</strong> Ask them to share their contact card link instead.
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">💡 How it works</span></div>
+    <div class="card-body" style="font-size:13px;line-height:1.7;color:var(--text-muted)">
+      <div style="margin-bottom:8px">🪪 <strong>Show your QR</strong> — tap "Show My QR Code" to display your contact QR on screen. The other person scans it with their Lead Capture app or phone camera.</div>
+      <div style="margin-bottom:8px">📷 <strong>Scan theirs</strong> — tap "Scan a Card" to open your camera and scan their QR. Their details auto-fill into a new lead form.</div>
+      <div>✅ <strong>Both win</strong> — you each get the other as a lead, with notes and qualification added instantly while the conversation is fresh.</div>
+    </div>
+  </div>
+</div>
+
+<!-- QR FULLSCREEN OVERLAY -->
+<div class="qr-fullscreen-overlay" id="qr-fullscreen" onclick="hideMyQR()">
+  <div class="qr-canvas-wrap" onclick="event.stopPropagation()">
+    <canvas id="qr-canvas" width="256" height="256"></canvas>
+  </div>
+  <div class="qr-name-label" id="qr-overlay-name"></div>
+  <div class="qr-company-label" id="qr-overlay-company"></div>
+  <div class="qr-hint">Other person scans this with their Lead Capture app or phone camera</div>
+  <button class="btn btn-secondary" style="margin-top:16px" onclick="hideMyQR()">✕ Close</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LEAD DETAIL MODAL
+═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="lead-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-lead-name">Lead Detail</h2>
+      <button class="modal-close" onclick="closeModal('lead-modal')">✕</button>
+    </div>
+    <div id="modal-lead-body"></div>
+  </div>
+</div>
+
+<!-- FOLLOW-UP MODAL -->
+<div class="modal-overlay" id="followup-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Follow-up Task</h2>
+      <button class="modal-close" onclick="closeModal('followup-modal')">✕</button>
+    </div>
+    <div id="followup-modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════
+const EVENTHIVE_CONFIG = {"companyName":"My Company","primaryColor":"#7C3AED","eventName":"My Event","eventDate":"","eventSlug":"my-event","standNumber":"","hotThreshold":70,"warmThreshold":40,"defaultFollowUpDays":1,"interestAreas":["Product Demo","Pricing","Enterprise Plan","Partnership","Technical Specs","Case Studies"],"currency":"GBP","currencySymbol":"£","currencyLocale":"en-GB","hotLeadValue":15000,"warmLeadValue":5000,"coldLeadValue":1000};
+
+const CFG = EVENTHIVE_CONFIG;
+const STORAGE_KEY = `eventhive_event_${CFG.eventSlug}_leads`;
+const REG_KEY = `eventhive_event_${CFG.eventSlug}_registration`;
+const EXH_KEY = `eventhive_event_${CFG.eventSlug}_exhibitors`;
+
+// BANT weights
+const BANT_WEIGHTS = { budget: 30, authority: 25, need: 25, timeline: 20 };
+const BANT_VAL_SCORE = { yes: 1.0, partial: 0.5, no: 0.0 };
+
+// State
+let state = { leads: [], tasks: [] };
+let bantState = { budget: null, authority: null, need: null, timeline: null };
+let selectedRating = null;
+let selectedInterests = [];
+let selectedLeadIds = new Set();
+let searchDebounce = null;
+let matchedAttendee = null;
+
+// ═══════════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════════
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state.leads = parsed.leads || [];
+      state.tasks = parsed.tasks || [];
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, leads: state.leads, tasks: state.tasks }));
+}
+
+function uuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random()*16|0;
+    return (c==='x' ? r : (r&0x3|0x8)).toString(16);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+function init() {
+  loadState();
+  // Apply branding
+  document.documentElement.style.setProperty('--primary', CFG.primaryColor);
+  // Header
+  document.getElementById('header-event-name').textContent = CFG.eventName;
+  if (CFG.standNumber) document.getElementById('header-stand').textContent = 'Stand ' + CFG.standNumber;
+  // Interest tags
+  renderInterestTags();
+  // If no leads, load sample data
+  if (state.leads.length === 0) {
+    loadSampleData();
+  }
+  renderAll();
+}
+
+function renderAll() {
+  updateQuickStats();
+  updateBadges();
+  renderLeadList();
+  renderFollowUps();
+  renderAnalytics();
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-content-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'analytics') renderAnalytics();
+}
+
+// ═══════════════════════════════════════════════════════════
+// BANT SCORING
+// ═══════════════════════════════════════════════════════════
+function setBant(btn, criterion, val) {
+  bantState[criterion] = val;
+  const container = btn.closest('.bant-toggle');
+  container.querySelectorAll('.bant-opt').forEach(b => b.className = 'bant-opt');
+  btn.classList.add(val);
+  updateBantScoreDisplay();
+}
+
+function calcBantScore(bant) {
+  let total = 0;
+  for (const [key, weight] of Object.entries(BANT_WEIGHTS)) {
+    const val = bant[key] || 'no';
+    total += weight * (BANT_VAL_SCORE[val] || 0);
+  }
+  return Math.round(total);
+}
+
+function updateBantScoreDisplay() {
+  const score = calcBantScore(bantState);
+  const rating = getRatingFromScore(score);
+  const fill = document.getElementById('score-bar-fill');
+  fill.style.width = score + '%';
+  fill.className = 'score-bar-fill ' + rating;
+  document.getElementById('score-pct').textContent = score + '%';
+  document.getElementById('bant-score-display').textContent = score + '%';
+  // Auto-suggest rating if not manually set
+  if (!selectedRating) autoSuggestRating(rating);
+}
+
+function autoSuggestRating(rating) {
+  // silently highlight the suggested rating
+  document.querySelectorAll('.rating-btn').forEach(b => {
+    b.className = 'rating-btn' + (b.dataset.rating === rating ? ' selected-' + rating : '');
+  });
+  selectedRating = rating;
+}
+
+function getRatingFromScore(score) {
+  if (score >= CFG.hotThreshold) return 'hot';
+  if (score >= CFG.warmThreshold) return 'warm';
+  return 'cold';
+}
+
+function selectRating(rating) {
+  selectedRating = rating;
+  document.querySelectorAll('.rating-btn').forEach(b => {
+    b.className = 'rating-btn' + (b.dataset.rating === rating ? ' selected-' + rating : '');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// INTEREST TAGS
+// ═══════════════════════════════════════════════════════════
+function renderInterestTags() {
+  const container = document.getElementById('interest-tags');
+  container.innerHTML = '';
+  (CFG.interestAreas || []).forEach(area => {
+    const btn = document.createElement('button');
+    btn.className = 'tag-btn' + (selectedInterests.includes(area) ? ' selected' : '');
+    btn.textContent = area;
+    btn.onclick = () => toggleInterest(area, btn);
+    container.appendChild(btn);
+  });
+}
+
+function toggleInterest(area, btn) {
+  if (selectedInterests.includes(area)) {
+    selectedInterests = selectedInterests.filter(a => a !== area);
+    btn.classList.remove('selected');
+  } else {
+    selectedInterests.push(area);
+    btn.classList.add('selected');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ATTENDEE MATCHING (LC.06)
+// ═══════════════════════════════════════════════════════════
+function getRegistrationData() {
+  try {
+    const raw = localStorage.getItem(REG_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return parsed.attendees || parsed.registrations || [];
+  } catch(e) { return []; }
+}
+
+let lookupDebounce = null;
+function debounceSearch() {
+  clearTimeout(lookupDebounce);
+  lookupDebounce = setTimeout(doLookupSearch, 250);
+}
+
+function doLookupSearch() {
+  const q = document.getElementById('lookup-input').value.trim().toLowerCase();
+  const container = document.getElementById('lookup-results');
+  if (q.length < 2) { container.innerHTML = ''; return; }
+  const attendees = getRegistrationData();
+  const matches = attendees.filter(a => {
+    const name = ((a.firstName || a.first_name || '') + ' ' + (a.lastName || a.last_name || '')).toLowerCase();
+    const email = (a.email || '').toLowerCase();
+    const company = (a.company || a.organisation || '').toLowerCase();
+    return name.includes(q) || email.includes(q) || company.includes(q);
+  }).slice(0, 5);
+  if (matches.length === 0) {
+    container.innerHTML = '<div class="no-match-banner">No attendee match found in Registration Manager data. Enter details manually below.</div>';
+    return;
+  }
+  container.innerHTML = matches.map(a => {
+    const name = ((a.firstName || a.first_name || '') + ' ' + (a.lastName || a.last_name || '')).trim();
+    return `<div onclick='applyAttendeeMatch(${JSON.stringify(a)})' style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--surface)" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='var(--surface)'">
+      <div style="font-weight:700;font-size:13px">${name}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${a.email || ''} · ${a.company || a.organisation || ''} · ${a.jobTitle || a.job_title || ''}</div>
+      ${a.ticketType || a.ticket_type ? `<div style="font-size:10px;margin-top:3px"><span class="tag-chip">${a.ticketType || a.ticket_type}</span></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function triggerEmailLookup() {
+  const email = document.getElementById('f-email').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) return;
+  const attendees = getRegistrationData();
+  const match = attendees.find(a => (a.email||'').toLowerCase() === email);
+  if (match) applyAttendeeMatch(match);
+}
+
+function applyAttendeeMatch(a) {
+  matchedAttendee = a;
+  document.getElementById('f-first').value = a.firstName || a.first_name || document.getElementById('f-first').value;
+  document.getElementById('f-last').value = a.lastName || a.last_name || document.getElementById('f-last').value;
+  document.getElementById('f-email').value = a.email || document.getElementById('f-email').value;
+  document.getElementById('f-company').value = a.company || a.organisation || document.getElementById('f-company').value;
+  document.getElementById('f-title').value = a.jobTitle || a.job_title || document.getElementById('f-title').value;
+  document.getElementById('f-attendee-id').value = a.id || '';
+  document.getElementById('f-ticket-type').value = a.ticketType || a.ticket_type || '';
+  const name = ((a.firstName || a.first_name || '') + ' ' + (a.lastName || a.last_name || '')).trim();
+  document.getElementById('match-banner-area').innerHTML = `<div class="match-banner"><span class="match-icon">✅</span><span>Matched: <strong>${name}</strong> from Registration Manager${a.ticketType || a.ticket_type ? ` — ${a.ticketType || a.ticket_type}` : ''}</span></div>`;
+  document.getElementById('lookup-results').innerHTML = '';
+  document.getElementById('lookup-input').value = '';
+  showToast('Attendee data applied ✓');
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVE LEAD (LC.02 + LC.03)
+// ═══════════════════════════════════════════════════════════
+function saveLead(andNew = false) {
+  const first = document.getElementById('f-first').value.trim();
+  const last = document.getElementById('f-last').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  if (!first && !last && !email) { showToast('Please enter at least a name or email'); return null; }
+
+  const bantScore = calcBantScore(bantState);
+  const rating = selectedRating || getRatingFromScore(bantScore);
+  const editId = document.getElementById('f-edit-id').value;
+
+  const lead = {
+    id: editId || uuid(),
+    firstName: first,
+    lastName: last,
+    email: email,
+    company: document.getElementById('f-company').value.trim(),
+    jobTitle: document.getElementById('f-title').value.trim(),
+    attendeeId: document.getElementById('f-attendee-id').value || null,
+    ticketType: document.getElementById('f-ticket-type').value || null,
+    rating: rating,
+    bantScore: bantScore,
+    bant: { ...bantState },
+    interests: [...selectedInterests],
+    budget: document.getElementById('f-budget').value,
+    timeline: document.getElementById('f-timeline').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    capturedAt: editId ? (state.leads.find(l => l.id === editId)?.capturedAt || new Date().toISOString()) : new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    followUpStatus: editId ? (state.leads.find(l => l.id === editId)?.followUpStatus || 'pending') : 'pending',
+    followUpDueDate: editId ? (state.leads.find(l => l.id === editId)?.followUpDueDate || getDefaultDueDate()) : getDefaultDueDate(),
+  };
+
+  if (editId) {
+    const idx = state.leads.findIndex(l => l.id === editId);
+    if (idx !== -1) state.leads[idx] = lead;
+  } else {
+    state.leads.unshift(lead);
+  }
+
+  saveState();
+  clearCaptureForm();
+  renderAll();
+  showToast(editId ? 'Lead updated ✓' : '🎯 Lead captured!');
+  if (!andNew) switchTab('leads');
+  return lead;
+}
+
+function saveAndNew() {
+  const lead = saveLead(true);
+  if (lead) {
+    switchTab('capture');
+    document.getElementById('f-first').focus();
+  }
+}
+
+function getDefaultDueDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + (CFG.defaultFollowUpDays || 1));
+  return d.toISOString().split('T')[0];
+}
+
+function clearCaptureForm() {
+  ['f-first','f-last','f-email','f-company','f-title','f-notes','f-edit-id','f-attendee-id','f-ticket-type'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-budget').value = '';
+  document.getElementById('f-timeline').value = '';
+  bantState = { budget: null, authority: null, need: null, timeline: null };
+  document.querySelectorAll('.bant-opt').forEach(b => b.className = 'bant-opt');
+  selectedRating = null;
+  selectedInterests = [];
+  document.querySelectorAll('.rating-btn').forEach(b => b.className = 'rating-btn');
+  renderInterestTags();
+  document.getElementById('score-bar-fill').style.width = '0%';
+  document.getElementById('score-pct').textContent = '—';
+  document.getElementById('bant-score-display').textContent = '';
+  document.getElementById('match-banner-area').innerHTML = '';
+  matchedAttendee = null;
+  document.getElementById('save-lead-btn').textContent = '💾 Save Lead';
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEAD LIST (LC.04)
+// ═══════════════════════════════════════════════════════════
+function getFilteredLeads() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const rating = document.getElementById('filter-rating')?.value || '';
+  const fuStatus = document.getElementById('filter-followup')?.value || '';
+  const sort = document.getElementById('sort-by')?.value || 'time_desc';
+
+  let leads = [...state.leads];
+  if (q) leads = leads.filter(l => {
+    return (l.firstName + ' ' + l.lastName).toLowerCase().includes(q) ||
+      (l.email||'').toLowerCase().includes(q) ||
+      (l.company||'').toLowerCase().includes(q);
+  });
+  if (rating) leads = leads.filter(l => l.rating === rating);
+  if (fuStatus) leads = leads.filter(l => l.followUpStatus === fuStatus);
+
+  leads.sort((a, b) => {
+    if (sort === 'time_desc') return new Date(b.capturedAt) - new Date(a.capturedAt);
+    if (sort === 'time_asc') return new Date(a.capturedAt) - new Date(b.capturedAt);
+    if (sort === 'score_desc') return (b.bantScore||0) - (a.bantScore||0);
+    if (sort === 'name_asc') return (a.firstName+a.lastName).localeCompare(b.firstName+b.lastName);
+    if (sort === 'company_asc') return (a.company||'').localeCompare(b.company||'');
+    return 0;
+  });
+  return leads;
+}
+
+function renderLeadList() {
+  const container = document.getElementById('lead-list-container');
+  const leads = getFilteredLeads();
+  updateBulkBar();
+
+  if (leads.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><h3>No leads yet</h3><p>Capture your first lead from the Capture tab. Leads appear here instantly.</p><button class="btn btn-primary" onclick="switchTab('capture')">Capture a Lead</button></div>`;
+    return;
+  }
+
+  const ratingIcon = { hot:'🔥', warm:'☀️', cold:'❄️', unqualified:'—' };
+  const fuLabels = { pending:'⏳ Pending', contacted:'📞 Contacted', meeting_booked:'📅 Meeting', proposal_sent:'📝 Proposal', won:'🏆 Won', lost:'❌ Lost' };
+  const now = new Date();
+
+  container.innerHTML = `<div class="lead-list">${leads.map(l => {
+    const name = [l.firstName, l.lastName].filter(Boolean).join(' ') || l.email || 'Unknown';
+    const isOverdue = l.followUpStatus === 'pending' && l.followUpDueDate && new Date(l.followUpDueDate) < now;
+    const isSelected = selectedLeadIds.has(l.id);
+    const tags = [
+      ...((l.interests||[]).slice(0,2).map(i => `<span class="tag-chip">${i}</span>`)),
+      l.followUpStatus !== 'pending' ? `<span class="tag-chip follow-up">${fuLabels[l.followUpStatus]||l.followUpStatus}</span>` : '',
+      isOverdue ? '<span class="tag-chip overdue">⚠️ Overdue</span>' : '',
+    ].filter(Boolean).join('');
+    return `<div class="lead-card${isSelected?' selected':''}" onclick="handleLeadCardClick(event, '${l.id}')">
+      <input type="checkbox" ${isSelected?'checked':''} onclick="toggleLeadSelect(event,'${l.id}')" style="margin-top:2px">
+      <div class="lead-rating-badge ${l.rating||'cold'}">${ratingIcon[l.rating]||'❄️'}</div>
+      <div class="lead-info">
+        <div class="lead-name">${name}</div>
+        <div class="lead-company">${l.company||''}${l.jobTitle ? ' · ' + l.jobTitle : ''}${l.ticketType ? ' · '+l.ticketType : ''}</div>
+        ${tags ? `<div class="lead-tags-row">${tags}</div>` : ''}
+      </div>
+      <div class="lead-meta">
+        <div class="lead-score ${l.rating||'cold'}">${l.bantScore||0}%</div>
+        <div>${formatTime(l.capturedAt)}</div>
+        ${l.email ? `<div style="font-size:10px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;max-width:80px">${l.email}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function handleLeadCardClick(e, id) {
+  if (e.target.type === 'checkbox') return;
+  openLeadModal(id);
+}
+
+function toggleLeadSelect(e, id) {
+  e.stopPropagation();
+  if (selectedLeadIds.has(id)) selectedLeadIds.delete(id);
+  else selectedLeadIds.add(id);
+  renderLeadList();
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  const count = selectedLeadIds.size;
+  if (count > 0) {
+    bar.classList.add('visible');
+    document.getElementById('bulk-count-label').textContent = count + ' selected';
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function clearBulk() { selectedLeadIds.clear(); renderLeadList(); }
+
+function bulkSetRating(rating) {
+  selectedLeadIds.forEach(id => {
+    const l = state.leads.find(l => l.id === id);
+    if (l) l.rating = rating;
+  });
+  saveState(); clearBulk(); renderAll();
+  showToast(`${selectedLeadIds.size} leads set to ${rating}`);
+}
+
+function bulkSetFollowUp() {
+  selectedLeadIds.forEach(id => {
+    const l = state.leads.find(l => l.id === id);
+    if (l) { l.followUpStatus = 'contacted'; l.updatedAt = new Date().toISOString(); }
+  });
+  saveState(); clearBulk(); renderAll();
+  showToast('Follow-up status updated');
+}
+
+function bulkExport() {
+  const leads = state.leads.filter(l => selectedLeadIds.has(l.id));
+  downloadCSV(leadsToCSV(leads), 'selected-leads.csv');
+  clearBulk();
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEAD MODAL (edit / status update)
+// ═══════════════════════════════════════════════════════════
+function openLeadModal(id) {
+  const l = state.leads.find(l => l.id === id);
+  if (!l) return;
+  const name = [l.firstName, l.lastName].filter(Boolean).join(' ') || l.email || 'Lead';
+  document.getElementById('modal-lead-name').textContent = name;
+  const ratingIcon = { hot:'🔥', warm:'☀️', cold:'❄️', unqualified:'—' };
+  const fuStatuses = ['pending','contacted','meeting_booked','proposal_sent','won','lost'];
+  const fuLabels = { pending:'⏳ Pending', contacted:'📞 Contacted', meeting_booked:'📅 Meeting Booked', proposal_sent:'📝 Proposal Sent', won:'🏆 Won', lost:'❌ Lost' };
+  document.getElementById('modal-lead-body').innerHTML = `
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:16px">
+      <div class="lead-rating-badge ${l.rating||'cold'}" style="width:48px;height:48px;font-size:22px">${ratingIcon[l.rating]||'❄️'}</div>
+      <div>
+        <div style="font-weight:600;font-size:13px">${l.company||'—'} ${l.jobTitle ? '· '+l.jobTitle : ''}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${l.email||''} ${l.ticketType ? '· '+l.ticketType : ''}</div>
+        <div style="font-size:12px;margin-top:4px"><strong>BANT:</strong> ${l.bantScore||0}% · <strong>Rating:</strong> ${l.rating||'—'}</div>
+      </div>
+    </div>
+    ${l.interests && l.interests.length ? `<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">INTERESTS</div><div class="tag-grid">${l.interests.map(i => `<span class="tag-chip">${i}</span>`).join('')}</div></div>` : ''}
+    ${l.budget || l.timeline ? `<div style="display:flex;gap:12px;margin-bottom:12px;font-size:13px"><div><strong>Budget:</strong> ${l.budget||'Unknown'}</div><div><strong>Timeline:</strong> ${l.timeline||'Unknown'}</div></div>` : ''}
+    ${l.notes ? `<div style="margin-bottom:12px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.5">${l.notes}</div>` : ''}
+    <div class="form-group">
+      <label>Follow-up Status</label>
+      <select id="modal-fu-status" onchange="updateLeadFollowUp('${l.id}',this.value)">
+        ${fuStatuses.map(s => `<option value="${s}" ${l.followUpStatus===s?'selected':''}>${fuLabels[s]}</option>`).join('')}
+      </select>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Captured: ${formatDateTime(l.capturedAt)}</div>
+    <div class="btn-group">
+      <button class="btn btn-primary" style="flex:1" onclick="editLead('${l.id}')">✏️ Edit Lead</button>
+      <button class="btn btn-secondary" onclick="createFollowUpFromLead('${l.id}')">➕ Add Task</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteLead('${l.id}')">🗑️</button>
+    </div>`;
+  document.getElementById('lead-modal').classList.add('open');
+}
+
+function updateLeadFollowUp(id, status) {
+  const l = state.leads.find(l => l.id === id);
+  if (l) { l.followUpStatus = status; l.updatedAt = new Date().toISOString(); }
+  saveState(); renderAll();
+  showToast('Status updated');
+}
+
+function editLead(id) {
+  const l = state.leads.find(l => l.id === id);
+  if (!l) return;
+  closeModal('lead-modal');
+  switchTab('capture');
+  document.getElementById('f-first').value = l.firstName || '';
+  document.getElementById('f-last').value = l.lastName || '';
+  document.getElementById('f-email').value = l.email || '';
+  document.getElementById('f-company').value = l.company || '';
+  document.getElementById('f-title').value = l.jobTitle || '';
+  document.getElementById('f-notes').value = l.notes || '';
+  document.getElementById('f-edit-id').value = l.id;
+  document.getElementById('f-budget').value = l.budget || '';
+  document.getElementById('f-timeline').value = l.timeline || '';
+  // BANT
+  bantState = { ...(l.bant || {}) };
+  Object.entries(bantState).forEach(([key, val]) => {
+    if (!val) return;
+    const container = document.querySelector(`.bant-toggle[data-bant="${key}"]`);
+    if (container) {
+      container.querySelectorAll('.bant-opt').forEach(b => { b.className = 'bant-opt' + (b.dataset.val === val ? ' ' + val : ''); });
+    }
+  });
+  updateBantScoreDisplay();
+  // Rating
+  selectedRating = l.rating || null;
+  document.querySelectorAll('.rating-btn').forEach(b => {
+    b.className = 'rating-btn' + (b.dataset.rating === selectedRating ? ' selected-' + selectedRating : '');
+  });
+  // Interests
+  selectedInterests = [...(l.interests || [])];
+  renderInterestTags();
+  document.getElementById('save-lead-btn').textContent = '💾 Update Lead';
+}
+
+function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  state.leads = state.leads.filter(l => l.id !== id);
+  saveState(); closeModal('lead-modal'); renderAll();
+  showToast('Lead deleted');
+}
+
+// ═══════════════════════════════════════════════════════════
+// FOLLOW-UP TASKS (LC.05)
+// ═══════════════════════════════════════════════════════════
+function generateFollowUps() {
+  const hots = state.leads.filter(l => l.rating === 'hot' && l.followUpStatus === 'pending');
+  const warms = state.leads.filter(l => l.rating === 'warm' && l.followUpStatus === 'pending');
+  let created = 0;
+  [...hots, ...warms].forEach(l => {
+    const exists = state.tasks.some(t => t.leadId === l.id && t.status !== 'done');
+    if (!exists) {
+      state.tasks.push(createTaskFromLead(l));
+      created++;
+    }
+  });
+  saveState(); renderFollowUps(); updateBadges();
+  showToast(`Generated ${created} follow-up tasks`);
+}
+
+function createTaskFromLead(lead) {
+  const templates = {
+    hot: 'Send proposal + book demo',
+    warm: 'Send product information',
+    cold: 'Add to nurture list',
+    unqualified: 'Add to general mailing list'
+  };
+  return {
+    id: uuid(),
+    leadId: lead.id,
+    leadName: [lead.firstName, lead.lastName].filter(Boolean).join(' ') || lead.email || 'Lead',
+    leadCompany: lead.company || '',
+    leadRating: lead.rating,
+    title: templates[lead.rating] || 'Follow up',
+    dueDate: lead.followUpDueDate || getDefaultDueDate(),
+    priority: lead.rating,
+    notes: lead.notes || '',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+}
+
+function createFollowUpFromLead(leadId) {
+  const l = state.leads.find(l => l.id === leadId);
+  if (!l) return;
+  const task = createTaskFromLead(l);
+  state.tasks.push(task);
+  saveState();
+  closeModal('lead-modal');
+  openFollowUpModal(task.id, true);
+  renderFollowUps(); updateBadges();
+}
+
+function openFollowUpModal(id, isNew = false) {
+  const task = state.tasks.find(t => t.id === id);
+  if (!task) return;
+  const ratingIcon = { hot:'🔥', warm:'☀️', cold:'❄️', unqualified:'—' };
+  document.getElementById('followup-modal-body').innerHTML = `
+    <div style="margin-bottom:12px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:13px">
+      <strong>${task.leadName}</strong>${task.leadCompany ? ' · ' + task.leadCompany : ''} <span>${ratingIcon[task.leadRating]||''}</span>
+    </div>
+    <div class="form-group">
+      <label>Task</label>
+      <input type="text" id="ft-title" value="${task.title}" placeholder="e.g. Send proposal">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Due Date</label>
+        <input type="date" id="ft-due" value="${task.dueDate||''}">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="ft-status">
+          <option value="pending" ${task.status==='pending'?'selected':''}>⏳ Pending</option>
+          <option value="done" ${task.status==='done'?'selected':''}>✅ Done</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="ft-notes" placeholder="Follow-up notes…">${task.notes||''}</textarea>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-full" onclick="saveFollowUpTask('${id}')">💾 Save Task</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteTask('${id}')">🗑️</button>
+    </div>`;
+  document.getElementById('followup-modal').classList.add('open');
+}
+
+function saveFollowUpTask(id) {
+  const t = state.tasks.find(t => t.id === id);
+  if (!t) return;
+  t.title = document.getElementById('ft-title').value.trim() || t.title;
+  t.dueDate = document.getElementById('ft-due').value;
+  t.notes = document.getElementById('ft-notes').value.trim();
+  t.status = document.getElementById('ft-status').value;
+  saveState(); closeModal('followup-modal'); renderFollowUps(); updateBadges();
+  showToast('Task saved');
+}
+
+function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  saveState(); closeModal('followup-modal'); renderFollowUps(); updateBadges();
+}
+
+function renderFollowUps() {
+  const container = document.getElementById('followup-list-container');
+  const statusFilter = document.getElementById('fu-filter-status')?.value || '';
+  const priorityFilter = document.getElementById('fu-filter-priority')?.value || '';
+  const sort = document.getElementById('fu-sort')?.value || 'due_asc';
+  const now = new Date();
+
+  let tasks = [...state.tasks];
+  if (statusFilter === 'overdue') tasks = tasks.filter(t => t.status !== 'done' && t.dueDate && new Date(t.dueDate) < now);
+  else if (statusFilter) tasks = tasks.filter(t => t.status === statusFilter);
+  if (priorityFilter) tasks = tasks.filter(t => t.leadRating === priorityFilter);
+
+  tasks.sort((a, b) => {
+    if (sort === 'due_asc') return new Date(a.dueDate||'9999') - new Date(b.dueDate||'9999');
+    const rp = { hot:0, warm:1, cold:2, unqualified:3 };
+    return (rp[a.leadRating]||3) - (rp[b.leadRating]||3);
+  });
+
+  const pending = state.tasks.filter(t => t.status !== 'done').length;
+  const overdue = state.tasks.filter(t => t.status !== 'done' && t.dueDate && new Date(t.dueDate) < now).length;
+  const summaryEl = document.getElementById('followup-summary');
+  if (summaryEl) summaryEl.textContent = `${pending} pending · ${overdue} overdue`;
+
+  if (tasks.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><h3>${statusFilter ? 'No matching tasks' : 'No follow-up tasks yet'}</h3><p>Generate tasks automatically from your hot and warm leads, or add them individually from the Leads tab.</p><button class="btn btn-primary" onclick="generateFollowUps()">⚡ Generate from Leads</button></div>`;
+    return;
+  }
+
+  const ratingIcon = { hot:'🔥', warm:'☀️', cold:'❄️', unqualified:'—' };
+  container.innerHTML = tasks.map(t => {
+    const isOverdue = t.status !== 'done' && t.dueDate && new Date(t.dueDate) < now;
+    const isToday = t.dueDate === now.toISOString().split('T')[0];
+    const dueCls = isOverdue ? 'overdue' : (isToday ? 'today' : 'upcoming');
+    const dueText = t.dueDate ? (isOverdue ? '⚠️ Overdue: ' : '📅 Due: ') + formatDate(t.dueDate) : 'No due date';
+    return `<div class="followup-card${isOverdue?' overdue':''}${t.status==='done'?' done':''}" onclick="openFollowUpModal('${t.id}')">
+      <div class="followup-header">
+        <div>
+          <div class="followup-title">${ratingIcon[t.leadRating]||''} ${t.title}</div>
+          <div class="followup-lead">${t.leadName}${t.leadCompany ? ' · '+t.leadCompany : ''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="followup-due ${dueCls}">${dueText}</div>
+          <div style="margin-top:4px"><span style="font-size:11px;padding:2px 8px;border-radius:999px;background:${t.status==='done'?'#DCFCE7':'var(--bg)'};color:${t.status==='done'?'#15803D':'var(--text-muted)'};font-weight:600">${t.status==='done'?'✅ Done':'Pending'}</span></div>
+        </div>
+      </div>
+      ${t.notes ? `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.4">${t.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// ANALYTICS (LC.07)
+// ═══════════════════════════════════════════════════════════
+function renderAnalytics() {
+  const leads = state.leads;
+  const total = leads.length;
+  if (!total) {
+    document.getElementById('pipeline-value').textContent = '£0';
+    document.getElementById('pipeline-breakdown').textContent = '';
+    ['an-total','an-rate','an-followup-rate','an-avg-score'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.textContent = '0';
+    });
+    return;
+  }
+
+  const counts = { hot:0, warm:0, cold:0, unqualified:0 };
+  leads.forEach(l => counts[l.rating||'cold'] = (counts[l.rating||'cold']||0) + 1);
+
+  // Pipeline value
+  const pipeline = (counts.hot * (CFG.hotLeadValue||15000)) + (counts.warm * (CFG.warmLeadValue||5000)) + (counts.cold * (CFG.coldLeadValue||1000));
+  const fmt = v => new Intl.NumberFormat(CFG.currencyLocale||'en-GB', { style:'currency', currency:CFG.currency||'GBP', maximumFractionDigits:0 }).format(v);
+  document.getElementById('pipeline-value').textContent = fmt(pipeline);
+  document.getElementById('pipeline-breakdown').textContent = `${counts.hot} hot × ${fmt(CFG.hotLeadValue)} + ${counts.warm} warm × ${fmt(CFG.warmLeadValue)} + ${counts.cold} cold × ${fmt(CFG.coldLeadValue)}`;
+
+  // Stats
+  document.getElementById('an-total').textContent = total;
+
+  // Capture rate (leads per hour since first capture)
+  if (leads.length > 1) {
+    const times = leads.map(l => new Date(l.capturedAt)).sort((a,b)=>a-b);
+    const hours = Math.max(1, (times[times.length-1] - times[0]) / 3600000);
+    document.getElementById('an-rate').textContent = (total/hours).toFixed(1) + '/hr';
+  } else { document.getElementById('an-rate').textContent = '—'; }
+
+  // Follow-up rate
+  const done = leads.filter(l => l.followUpStatus !== 'pending').length;
+  document.getElementById('an-followup-rate').textContent = Math.round(done/total*100) + '%';
+
+  // Avg BANT score
+  const avgScore = Math.round(leads.reduce((s,l) => s + (l.bantScore||0), 0) / total);
+  document.getElementById('an-avg-score').textContent = avgScore + '%';
+
+  // Rating bars
+  const ratingColors = { hot:'var(--hot)', warm:'var(--warm)', cold:'var(--cold)', unqualified:'var(--unqualified)' };
+  const ratingIcons = { hot:'🔥', warm:'☀️', cold:'❄️', unqualified:'—' };
+  document.getElementById('rating-bars').innerHTML = Object.entries(counts).map(([r, c]) => {
+    const pct = total ? Math.round(c/total*100) : 0;
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px">
+        <span>${ratingIcons[r]} ${r.charAt(0).toUpperCase()+r.slice(1)}</span>
+        <span>${c} (${pct}%)</span>
+      </div>
+      <div style="background:var(--border);border-radius:999px;height:8px;overflow:hidden">
+        <div style="height:100%;border-radius:999px;background:${ratingColors[r]};width:${pct}%;transition:width 0.3s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Top interests
+  const interestCounts = {};
+  leads.forEach(l => (l.interests||[]).forEach(i => interestCounts[i] = (interestCounts[i]||0)+1));
+  const sortedInterests = Object.entries(interestCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  const maxInt = sortedInterests[0]?.[1] || 1;
+  document.getElementById('top-interests').innerHTML = sortedInterests.length
+    ? sortedInterests.map(([i, c]) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="flex:0 0 140px;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i}</div>
+        <div style="flex:1;background:var(--border);border-radius:999px;height:8px;overflow:hidden">
+          <div style="height:100%;border-radius:999px;background:var(--primary);width:${Math.round(c/maxInt*100)}%"></div>
+        </div>
+        <div style="flex:0 0 28px;font-size:12px;font-weight:700;text-align:right">${c}</div>
+      </div>`).join('')
+    : '<div style="color:var(--text-muted);font-size:13px">No interest areas tagged yet</div>';
+
+  // Timeline chart (leads by hour of day)
+  const hourCounts = new Array(24).fill(0);
+  leads.forEach(l => hourCounts[new Date(l.capturedAt).getHours()]++);
+  drawTimelineChart(hourCounts);
+
+  // Follow-up status bars
+  const fuStatuses = { pending:'⏳ Pending', contacted:'📞 Contacted', meeting_booked:'📅 Meeting Booked', proposal_sent:'📝 Proposal Sent', won:'🏆 Won', lost:'❌ Lost' };
+  const fuCounts = {};
+  leads.forEach(l => fuCounts[l.followUpStatus||'pending'] = (fuCounts[l.followUpStatus||'pending']||0)+1);
+  document.getElementById('followup-status-bars').innerHTML = Object.entries(fuStatuses).map(([s, label]) => {
+    const c = fuCounts[s]||0;
+    const pct = total ? Math.round(c/total*100) : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="flex:0 0 110px;font-size:12px;font-weight:600">${label}</div>
+      <div style="flex:1;background:var(--border);border-radius:999px;height:8px;overflow:hidden">
+        <div style="height:100%;border-radius:999px;background:var(--primary);width:${pct}%"></div>
+      </div>
+      <div style="flex:0 0 32px;font-size:12px;font-weight:700;text-align:right">${c}</div>
+    </div>`;
+  }).join('');
+}
+
+function drawTimelineChart(hourCounts) {
+  const canvas = document.getElementById('timeline-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.offsetWidth || 300;
+  const H = 120;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const max = Math.max(...hourCounts, 1);
+  const pad = { top: 10, right: 10, bottom: 24, left: 24 };
+  const iW = W - pad.left - pad.right;
+  const iH = H - pad.top - pad.bottom;
+  const barW = iW / 24;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 1;
+  [0.25,0.5,0.75,1].forEach(f => {
+    const y = pad.top + iH * (1 - f);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+  });
+
+  // Bars
+  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#7C3AED';
+  hourCounts.forEach((count, hour) => {
+    if (!count) return;
+    const x = pad.left + hour * barW;
+    const h = (count / max) * iH;
+    const y = pad.top + iH - h;
+    ctx.fillStyle = primaryColor;
+    ctx.beginPath(); ctx.roundRect(x + 1, y, barW - 2, h, 2); ctx.fill();
+  });
+
+  // Hour labels
+  ctx.fillStyle = '#94A3B8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  [0, 6, 12, 18, 23].forEach(h => {
+    ctx.fillText(h + ':00', pad.left + h * barW + barW/2, H - 6);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPORT (LC.08)
+// ═══════════════════════════════════════════════════════════
+function leadsToCSV(leads) {
+  const headers = ['First Name','Last Name','Email','Company','Job Title','Ticket Type','Rating','BANT Score','Budget','Timeline','Interests','Notes','Follow-up Status','Follow-up Due','Captured At'];
+  const rows = leads.map(l => [
+    l.firstName||'', l.lastName||'', l.email||'', l.company||'', l.jobTitle||'',
+    l.ticketType||'', l.rating||'', l.bantScore||0, l.budget||'', l.timeline||'',
+    (l.interests||[]).join('; '), (l.notes||'').replace(/\n/g,' '),
+    l.followUpStatus||'', l.followUpDueDate||'',
+    l.capturedAt ? new Date(l.capturedAt).toLocaleString() : ''
+  ]);
+  return [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+}
+
+function exportLeadsCSV() {
+  if (!state.leads.length) { showToast('No leads to export'); return; }
+  downloadCSV(leadsToCSV(state.leads), `leads-${CFG.eventSlug || 'export'}.csv`);
+  showToast('Leads exported ✓');
+}
+
+function exportHotLeadsCSV() {
+  const hot = state.leads.filter(l => l.rating === 'hot');
+  if (!hot.length) { showToast('No hot leads yet'); return; }
+  downloadCSV(leadsToCSV(hot), `hot-leads-${CFG.eventSlug || 'export'}.csv`);
+  showToast(`${hot.length} hot leads exported ✓`);
+}
+
+function exportFollowUpCSV() {
+  if (!state.tasks.length) { showToast('No tasks to export'); return; }
+  const headers = ['Task','Lead Name','Lead Company','Lead Rating','Due Date','Status','Notes'];
+  const rows = state.tasks.map(t => [t.title||'', t.leadName||'', t.leadCompany||'', t.leadRating||'', t.dueDate||'', t.status||'', (t.notes||'').replace(/\n/g,' ')]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  downloadCSV(csv, `follow-up-tasks-${CFG.eventSlug || 'export'}.csv`);
+  showToast('Follow-up tasks exported ✓');
+}
+
+function downloadCSV(content, filename) {
+  const blob = new Blob([content], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function printSummary() { window.print(); }
+
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function updateQuickStats() {
+  const counts = { hot:0, warm:0, cold:0, unqualified:0 };
+  state.leads.forEach(l => counts[l.rating||'cold'] = (counts[l.rating||'cold']||0)+1);
+  const total = state.leads.length;
+  document.getElementById('qs-total').textContent = total;
+  document.getElementById('qs-hot').textContent = counts.hot;
+  document.getElementById('qs-warm').textContent = counts.warm;
+  document.getElementById('qs-cold').textContent = counts.cold;
+  document.getElementById('header-total-leads').textContent = total + ' lead' + (total !== 1 ? 's' : '');
+
+  // Rate
+  if (total > 1) {
+    const times = state.leads.map(l => new Date(l.capturedAt)).sort((a,b)=>a-b);
+    const hours = Math.max(0.1, (times[times.length-1] - times[0]) / 3600000);
+    document.getElementById('qs-rate').textContent = (total/hours).toFixed(1) + '/hr';
+  } else { document.getElementById('qs-rate').textContent = '—'; }
+}
+
+function updateBadges() {
+  document.getElementById('badge-leads').textContent = state.leads.length;
+  const overdue = state.tasks.filter(t => t.status !== 'done' && t.dueDate && new Date(t.dueDate) < new Date()).length;
+  const pending = state.tasks.filter(t => t.status !== 'done').length;
+  document.getElementById('badge-followup').textContent = overdue || pending || 0;
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+function formatDate(str) {
+  if (!str) return '';
+  const [y,m,d] = str.split('-');
+  return `${d}/${m}/${y}`;
+}
+function formatDateTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════════
+// SAMPLE DATA (LC.09) — 75 leads, 20 tasks
+// ═══════════════════════════════════════════════════════════
+function loadSampleData() {
+  const now = new Date();
+  const day1 = new Date(now); day1.setDate(day1.getDate() - 1);
+  const day2 = new Date(now);
+
+  const firstNames = ['Emma','James','Sarah','Oliver','Sophie','Harry','Charlotte','George','Amelia','William','Lily','Jack','Grace','Henry','Isla','Thomas','Mia','Joshua','Ava','Samuel','Emily','Luke','Jessica','Daniel','Hannah','Benjamin','Lucy','Alexander','Chloe','Matthew','Ella','Joseph','Zoe','Christopher','Millie','Ethan','Poppy','Liam','Freya','Noah','Imogen','Logan','Alice','Mason','Ruby','Sebastian','Ellie','Nathan','Eva','Ryan','Holly','Adam','Rosie','Michael','Bella','Jake','Amy','Callum','Abigail','Jamie','Phoebe','Dylan','Molly','Lewis','Megan','Rory','Rachel','Connor','Naomi','Owen','Isabel','Kieran','Clara','Alex','Kate'];
+  const lastNames = ['Smith','Jones','Williams','Brown','Taylor','Davies','Evans','Wilson','Thomas','Johnson','Roberts','Walker','White','Green','Hall','Wood','Harris','Martin','Jackson','Clarke','Clark','Turner','Hill','Scott','Moore','Cooper','Ward','Morris','Bell','King','Lee','Baker','Allen','Adams','Nelson','Carter','Mitchell','Peake','Rogers','Phillips','Watson','Morgan','Collins','Hughes','Price','Barnes','Fisher','Edwards','Stewart','Murray'];
+  const companies = ['TechCorp Ltd','FinanceHub','MediaGroup UK','Retail Solutions','HealthTech','EduLearn','LogiPro','SecureNet','DataFlow','CloudBase','GreenEnergy','AutoParts','FoodTech','RetailEdge','MediaStream','FinServ','InsureTech','PropTech','MarTech','HRConnect','SalesForce UK','DigitalFirst','Innovate Ltd','AgileWorks','NextGen Tech','BlueSky Solutions','RedLine Group','Apex Digital','Fusion Media','Vertex Systems'];
+  const titles = ['Head of Product','CTO','CEO','Marketing Director','Sales Director','IT Manager','Operations Lead','Digital Manager','VP Engineering','Product Manager','Strategy Lead','Growth Manager','Brand Director','Tech Lead','CFO','COO','VP Sales','Head of IT','Programme Manager','Solutions Architect'];
+  const interestSets = [
+    ['Product Demo','Enterprise Plan'],
+    ['Pricing','Technical Specs'],
+    ['Partnership','Case Studies'],
+    ['Product Demo','Pricing'],
+    ['Enterprise Plan','Technical Specs'],
+    ['Case Studies','Partnership'],
+    ['Product Demo'],
+    ['Pricing'],
+    ['Enterprise Plan','Case Studies'],
+    ['Technical Specs','Product Demo'],
+  ];
+  const ratings = ['hot','hot','warm','warm','warm','cold','cold','cold','cold','unqualified'];
+  const bantOptions = ['yes','yes','partial','no'];
+  const budgets = ['£50K–100K','£10K–50K','£100K+','Under £10K','Unknown','Unknown'];
+  const timelines = ['Immediate','Q1 2027','Q2 2027','H2 2027','Unknown'];
+  const fuStatuses = ['pending','pending','pending','contacted','contacted','meeting_booked','proposal_sent','won'];
+  const notesSamples = [
+    'Very interested in enterprise deployment. Wants a demo with their CTO.',
+    'Budget approved for Q1. Key decision maker — fast mover.',
+    'Exploring options, currently using a competitor. Wants pricing comparison.',
+    'Interested in the API integration capability. Technical buyer.',
+    'Looking to implement before end of year. Strong need identified.',
+    'Early stage research. Add to nurture sequence.',
+    'No immediate budget but good long-term prospect.',
+    'Decision committee of 4 — needs full proposal.',
+    'Loved the product demo. Ready to start a trial.',
+    'Competitive evaluation underway. Focus on ROI case.',
+    '',''
+  ];
+
+  function randOf(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function randHour(date, min, max) {
+    const d = new Date(date);
+    d.setHours(min + Math.floor(Math.random() * (max - min)), Math.floor(Math.random()*60), 0, 0);
+    return d.toISOString();
+  }
+  function randBant() {
+    return {
+      budget: randOf(bantOptions),
+      authority: randOf(bantOptions),
+      need: randOf(bantOptions),
+      timeline: randOf(bantOptions)
+    };
+  }
+
+  const sampleLeads = [];
+  for (let i = 0; i < 75; i++) {
+    const day = i < 40 ? day1 : day2;
+    const bant = randBant();
+    const score = calcBantScore(bant);
+    const ratingByScore = getRatingFromScore(score);
+    const rating = Math.random() < 0.7 ? ratingByScore : randOf(ratings);
+    const fn = randOf(firstNames);
+    const ln = randOf(lastNames);
+    const co = randOf(companies);
+    sampleLeads.push({
+      id: uuid(),
+      firstName: fn,
+      lastName: ln,
+      email: `${fn.toLowerCase()}.${ln.toLowerCase()}@${co.toLowerCase().replace(/[^a-z]/g,'')}.com`,
+      company: co,
+      jobTitle: randOf(titles),
+      rating: rating,
+      bantScore: score,
+      bant: bant,
+      interests: randOf(interestSets),
+      budget: randOf(budgets),
+      timeline: randOf(timelines),
+      notes: randOf(notesSamples),
+      capturedAt: randHour(day, 9, 17),
+      updatedAt: randHour(day, 9, 17),
+      followUpStatus: randOf(fuStatuses),
+      followUpDueDate: getDefaultDueDate(),
+      ticketType: randOf(['Delegate','VIP','Sponsor','Press',null,null]),
+    });
+  }
+  state.leads = sampleLeads;
+
+  // 20 follow-up tasks
+  const hotWarmLeads = sampleLeads.filter(l => l.rating === 'hot' || l.rating === 'warm').slice(0, 20);
+  const taskTitles = {
+    hot: ['Send proposal and schedule call','Book product demo with team','Follow up on demo request','Send enterprise pricing deck'],
+    warm: ['Send product brochure','Add to case study nurture','Schedule discovery call','Share relevant whitepaper'],
+    cold: ['Add to newsletter list','Send event recap email'],
+  };
+  state.tasks = hotWarmLeads.map((l, i) => {
+    const dueDate = new Date(now);
+    dueDate.setDate(dueDate.getDate() + (i < 10 ? i % 3 : i % 5));
+    const titles = taskTitles[l.rating] || taskTitles.warm;
+    return {
+      id: uuid(),
+      leadId: l.id,
+      leadName: l.firstName + ' ' + l.lastName,
+      leadCompany: l.company,
+      leadRating: l.rating,
+      title: randOf(titles),
+      dueDate: dueDate.toISOString().split('T')[0],
+      priority: l.rating,
+      notes: l.notes || '',
+      status: i < 5 ? 'done' : 'pending',
+      createdAt: l.capturedAt
+    };
+  });
+
+  saveState();
+}
+
+// ═══════════════════════════════════════════════════════════
+// MY CARD — Profile, QR Generation, Scanner
+// ═══════════════════════════════════════════════════════════
+const PROFILE_KEY = 'eventhive_my_profile';
+let myProfile = {};
+let scannerStream = null;
+let scannerActive = false;
+let lastScanned = null;
+
+function loadProfile() {
+  try { myProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { myProfile = {}; }
+}
+
+function saveProfile() {
+  myProfile = {
+    n: (document.getElementById('p-first').value + ' ' + document.getElementById('p-last').value).trim(),
+    e: document.getElementById('p-email').value.trim(),
+    co: document.getElementById('p-company').value.trim(),
+    t: document.getElementById('p-title').value.trim(),
+    ph: document.getElementById('p-phone').value.trim()
+  };
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(myProfile));
+  toggleProfileEdit(false);
+  renderProfileDisplay();
+  showToast('Your card saved ✓');
+}
+
+function toggleProfileEdit(forceOpen) {
+  const isEditing = document.getElementById('profile-edit').style.display !== 'none';
+  const open = forceOpen !== undefined ? forceOpen : !isEditing;
+  document.getElementById('profile-edit').style.display = open ? 'block' : 'none';
+  document.getElementById('profile-display').style.display = open ? 'none' : 'block';
+  document.getElementById('profile-edit-btn').textContent = open ? 'Cancel' : 'Edit';
+  if (open) {
+    const parts = (myProfile.n || '').split(' ');
+    document.getElementById('p-first').value = parts[0] || '';
+    document.getElementById('p-last').value = parts.slice(1).join(' ') || '';
+    document.getElementById('p-email').value = myProfile.e || '';
+    document.getElementById('p-company').value = myProfile.co || '';
+    document.getElementById('p-title').value = myProfile.t || '';
+    document.getElementById('p-phone').value = myProfile.ph || '';
+  }
+}
+
+function renderProfileDisplay() {
+  const name = myProfile.n || '';
+  const hasProfile = !!name;
+  const initials = name ? name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) : '👤';
+  document.getElementById('profile-avatar-disp').textContent = hasProfile ? initials : '👤';
+  document.getElementById('profile-disp-name').textContent = hasProfile ? name : 'Set up your profile →';
+  document.getElementById('profile-disp-title').textContent = [myProfile.t, myProfile.co].filter(Boolean).join(' · ');
+  document.getElementById('profile-disp-email').textContent = myProfile.e || '';
+  document.getElementById('show-qr-btn').disabled = !hasProfile;
+  if (!hasProfile) toggleProfileEdit(true);
+}
+
+// ── Compact QR Code Generator (Byte mode, EC Level M) ──────
+// Based on standard QR code algorithm (ISO/IEC 18004)
+// Supports versions 1-40, suitable for contact card payloads
+(function(){
+  // GF(256) tables for Reed-Solomon over primitive polynomial x^8+x^4+x^3+x^2+1
+  const LOG = new Uint8Array(256), EXP = new Uint8Array(512);
+  for (let i=0, x=1; i<255; i++, x = x>=128 ? ((x<<1)^285)&255 : x<<1) { LOG[x]=i; EXP[i]=EXP[i+255]=x; }
+
+  function gfPoly(ec, data) {
+    let g = [1];
+    for (let i=0; i<ec; i++) {
+      const r = [1, EXP[i]];
+      const p = new Uint8Array(g.length + r.length - 1);
+      for (let a=0; a<g.length; a++) for (let b=0; b<r.length; b++) p[a+b] ^= EXP[(LOG[g[a]]+LOG[r[b]])%255]||0;
+      // carry
+      g = Array.from(p);
+    }
+    g.shift();
+    const out = new Uint8Array(data.length + ec);
+    out.set(data);
+    for (let i=0; i<data.length; i++) {
+      if (!out[i]) continue;
+      const c = LOG[out[i]];
+      for (let j=0; j<g.length; j++) out[i+1+j] ^= EXP[(c+LOG[g[j]])%255]||0;
+    }
+    return out.slice(data.length);
+  }
+
+  // Capacity table [version][0=EC_M data codewords]
+  const CAP = [0,16,28,44,64,86,108,124,154,182,216,254,290,334,365,415,453,507,563,627,669,714,782,860,914,1000,1062,1128,1193,1267,1373,1455,1541,1631,1725,1812,1914,1992,2102,2216,2334];
+
+  function pickVersion(bytes) {
+    for (let v=1; v<=40; v++) if (CAP[v] >= bytes + 2) return v;
+    return 40;
+  }
+
+  // Format info bits (EC=M, mask=0..7) — pre-computed
+  const FMT_M = [0x5412,0x5125,0x5E7C,0x5B4B,0x45F9,0x40CE,0x4F97,0x4AA0];
+  // Alignment pattern positions by version
+  const ALIGN = [[],[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90]];
+
+  function buildMatrix(ver) {
+    const n = ver*4+17;
+    const m = Array.from({length:n}, ()=>new Int8Array(n).fill(-1));
+    // Finder + separator
+    function finder(r, c) {
+      for (let i=-1; i<8; i++) for (let j=-1; j<8; j++) {
+        const pr = r+i, pc = c+j;
+        if (pr<0||pr>=n||pc<0||pc>=n) continue;
+        m[pr][pc] = (i>=0&&i<7&&j>=0&&j<7 && (i===0||i===6||j===0||j===6||(i>=2&&i<=4&&j>=2&&j<=4))) ? 1 : 0;
+      }
+    }
+    finder(0,0); finder(0,n-7); finder(n-7,0);
+    // Timing
+    for (let i=8; i<n-8; i++) { m[6][i] = m[i][6] = i%2===0 ? 1 : 0; }
+    // Dark module
+    m[n-8][8] = 1;
+    // Alignment patterns
+    if (ver >= 2) {
+      const pos = ALIGN[ver]||[];
+      for (const r of pos) for (const c of pos) {
+        if (m[r][c] !== -1) continue;
+        for (let i=-2; i<=2; i++) for (let j=-2; j<=2; j++) {
+          m[r+i][c+j] = (i===-2||i===2||j===-2||j===2||(!i&&!j)) ? 1 : 0;
+        }
+      }
+    }
+    // Format info placeholders
+    for (let i=0; i<6; i++) { m[8][i]=0; m[i][8]=0; }
+    m[8][7]=0; m[8][8]=0; m[7][8]=0;
+    for (let i=0; i<8; i++) { m[8][n-1-i]=0; m[n-1-i][8]=0; }
+    return m;
+  }
+
+  function encodeData(data, ver) {
+    // Count total codewords for version/EC-M
+    const totalCW = [0,26,44,70,100,134,172,196,242,292,346,404,466,532,581,655,733,815,901,991,1085,1156,1258,1364,1474,1588,1706,1828,1921,2051,2185,2323,2465,2611,2761,2876,3034,3196,3362,3532,3706];
+    const dcCW = CAP[ver];
+    const ecCW = totalCW[ver] - dcCW;
+    const buf = [];
+    // Mode indicator (byte = 0100)
+    let bits = 0b0100, blen = 4;
+    function push(v, n) { for (let i=n-1; i>=0; i--) { bits = (bits<<1)|(v>>i&1); blen++; if (blen===8) { buf.push(bits&0xFF); bits=0; blen=0; } } }
+    const charCountBits = ver<=9?8:16;
+    push(data.length, charCountBits);
+    for (const b of data) push(b, 8);
+    push(0, 4); // terminator
+    while (blen) push(0, 1);
+    while (buf.length < dcCW) buf.push(buf.length%2?0x11:0xEC);
+    // RS error correction
+    const ec = gfPoly(ecCW, new Uint8Array(buf));
+    return [...buf, ...ec];
+  }
+
+  function placeData(m, cw) {
+    const n = m.length;
+    let bit = 0;
+    for (let col = n-1; col > 0; col -= 2) {
+      if (col === 6) col = 5;
+      for (let row = 0; row < n; row++) {
+        const r = ((col+1)>>1)%2 ? n-1-row : row;
+        for (let i = 0; i < 2; i++) {
+          const c = col - i;
+          if (m[r][c] !== -1) continue;
+          const byte = bit >> 3;
+          const bbit = 7 - (bit & 7);
+          m[r][c] = byte < cw.length ? (cw[byte] >> bbit) & 1 : 0;
+          bit++;
+        }
+      }
+    }
+  }
+
+  function applyMask(m, mask) {
+    const n = m.length;
+    const fns = [
+      (r,c)=>(r+c)%2===0, (r)=>r%2===0, (_,c)=>c%3===0,
+      (r,c)=>(r+c)%3===0, (r,c)=>(Math.floor(r/2)+Math.floor(c/3))%2===0,
+      (r,c)=>((r*c)%2+(r*c)%3)===0, (r,c)=>(((r*c)%2+(r*c)%3)%2)===0,
+      (r,c)=>(((r+c)%2+(r*c)%3)%2)===0
+    ];
+    const fn = fns[mask];
+    for (let r=0; r<n; r++) for (let c=0; c<n; c++) {
+      if (m[r][c]>=0) m[r][c] ^= fn(r,c)?1:0;
+    }
+  }
+
+  function applyFormat(m, mask) {
+    const n = m.length;
+    const fmt = FMT_M[mask];
+    const bits = [];
+    for (let i=14; i>=0; i--) bits.push((fmt>>i)&1);
+    const pos1 = [[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
+    const pos2 = [[n-1,8],[n-2,8],[n-3,8],[n-4,8],[n-5,8],[n-6,8],[n-7,8],[8,n-8],[8,n-7],[8,n-6],[8,n-5],[8,n-4],[8,n-3],[8,n-2],[8,n-1]];
+    pos1.forEach(([r,c],i)=>m[r][c]=bits[i]);
+    pos2.forEach(([r,c],i)=>m[r][c]=bits[i]);
+  }
+
+  window.qrGenerate = function(str) {
+    const bytes = new TextEncoder().encode(str);
+    const ver = pickVersion(bytes.length);
+    const m = buildMatrix(ver);
+    const cw = encodeData(bytes, ver);
+    placeData(m, cw);
+    // Choose best mask (evaluate penalty — simplified: just use mask 0)
+    applyMask(m, 0);
+    applyFormat(m, 0);
+    return m;
+  };
+})();
+
+function drawQROnCanvas(canvas, matrix) {
+  const n = matrix.length;
+  const quietZone = 4;
+  const total = n + quietZone * 2;
+  const size = Math.min(256, Math.floor(canvas.parentElement.offsetWidth * 0.9 / total) * total || 256);
+  const scale = Math.floor(size / total) || 1;
+  const px = total * scale;
+  canvas.width = px; canvas.height = px;
+  canvas.style.width = px + 'px'; canvas.style.height = px + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, px, px);
+  ctx.fillStyle = '#000000';
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (matrix[r][c] === 1) {
+        ctx.fillRect((c + quietZone) * scale, (r + quietZone) * scale, scale, scale);
+      }
+    }
+  }
+}
+
+function showMyQR() {
+  if (!myProfile.n) { showToast('Set up your profile first'); toggleProfileEdit(true); return; }
+  const payload = 'EVENTHIVE-LEAD:' + JSON.stringify({ n: myProfile.n, e: myProfile.e, co: myProfile.co, t: myProfile.t, ph: myProfile.ph || '' });
+  try {
+    const matrix = qrGenerate(payload);
+    const canvas = document.getElementById('qr-canvas');
+    drawQROnCanvas(canvas, matrix);
+    document.getElementById('qr-overlay-name').textContent = myProfile.n;
+    document.getElementById('qr-overlay-company').textContent = [myProfile.t, myProfile.co].filter(Boolean).join(' · ');
+    document.getElementById('qr-fullscreen').classList.add('open');
+    // Request max screen brightness hint
+    try { if (screen.orientation) screen.orientation.lock('portrait').catch(()=>{}); } catch(e){}
+    // Keep screen awake
+    try { if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{}); } catch(e){}
+  } catch(err) {
+    showToast('QR generation failed — check your profile');
+  }
+}
+
+function hideMyQR() {
+  document.getElementById('qr-fullscreen').classList.remove('open');
+}
+
+// ── QR Scanner (BarcodeDetector API, getUserMedia fallback) ─
+async function startScanner() {
+  document.getElementById('scanner-card').style.display = 'block';
+  document.getElementById('scan-result-banner').classList.remove('visible');
+  document.getElementById('no-camera-msg').style.display = 'none';
+  const video = document.getElementById('scanner-video');
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } } });
+    video.srcObject = scannerStream;
+    await video.play();
+    scannerActive = true;
+    scanLoop();
+  } catch(err) {
+    document.getElementById('no-camera-msg').style.display = 'block';
+    document.getElementById('scanner-video').style.display = 'none';
+  }
+}
+
+function stopScanner() {
+  scannerActive = false;
+  if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+  document.getElementById('scanner-card').style.display = 'none';
+  document.getElementById('scan-result-banner').classList.remove('visible');
+}
+
+async function scanLoop() {
+  if (!scannerActive) return;
+  const video = document.getElementById('scanner-video');
+  const status = document.getElementById('scanner-status');
+
+  // Try BarcodeDetector (Chrome/Edge/Safari 17.4+)
+  if ('BarcodeDetector' in window) {
+    try {
+      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+      const tick = async () => {
+        if (!scannerActive) return;
+        if (video.readyState >= 2) {
+          try {
+            const codes = await detector.detect(video);
+            if (codes.length) {
+              const raw = codes[0].rawValue;
+              if (raw !== lastScanned) { lastScanned = raw; handleScannedCode(raw); }
+            }
+          } catch(e) {}
+        }
+        requestAnimationFrame(tick);
+      };
+      tick();
+    } catch(e) { canvasScanLoop(); }
+  } else {
+    // Canvas fallback — requires jsQR (not bundled; show hint)
+    status.textContent = 'Use your phone\'s built-in camera scanner instead';
+    scannerActive = false;
+  }
+}
+
+function handleScannedCode(raw) {
+  let contact = null;
+  if (raw.startsWith('EVENTHIVE-LEAD:')) {
+    try { contact = JSON.parse(raw.slice(15)); } catch(e) {}
+  } else if (raw.startsWith('BEGIN:VCARD')) {
+    // Basic vCard parse
+    const get = (key) => { const m = raw.match(new RegExp(key+'[^:]*:([^\r\n]+)')); return m ? m[1].trim() : ''; };
+    const fn = get('FN'); const parts = fn.split(' ');
+    contact = { n: fn, e: get('EMAIL'), co: get('ORG'), t: get('TITLE'), ph: get('TEL') };
+  }
+  if (contact) {
+    lastScanned = raw;
+    const name = contact.n || '';
+    document.getElementById('scan-result-text').textContent =
+      [name, contact.t, contact.co, contact.e].filter(Boolean).join(' · ');
+    document.getElementById('scan-result-banner').classList.add('visible');
+    document.getElementById('scanner-status').textContent = '✅ Contact found!';
+    // Pause scanning
+    scannerActive = false;
+    if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+    showToast('Contact scanned ✓');
+    window._scannedContact = contact;
+  }
+}
+
+function applyScanToLead() {
+  const c = window._scannedContact;
+  if (!c) return;
+  stopScanner();
+  switchTab('capture');
+  clearCaptureForm();
+  const parts = (c.n || '').trim().split(' ');
+  document.getElementById('f-first').value = parts[0] || '';
+  document.getElementById('f-last').value = parts.slice(1).join(' ') || '';
+  document.getElementById('f-email').value = c.e || '';
+  document.getElementById('f-company').value = c.co || '';
+  document.getElementById('f-title').value = c.t || '';
+  document.getElementById('match-banner-area').innerHTML = '<div class="match-banner"><span class="match-icon">📷</span><span>Scanned contact auto-filled · Add qualification below</span></div>';
+  document.getElementById('f-first').focus();
+  window._scannedContact = null;
+  showToast('Contact data applied — qualify and save!');
+}
+
+// Stop scanner when switching tabs
+const _origSwitch = switchTab;
+switchTab = function(tab) {
+  if (tab !== 'mycard' && scannerActive) stopScanner();
+  _origSwitch(tab);
+  if (tab === 'mycard') { loadProfile(); renderProfileDisplay(); }
+};
+
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
+loadProfile();
+init();
+</script>
+</body>
+</html>
